@@ -29,27 +29,24 @@ function init() {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 100px;
     pointer-events: auto;
   `;
 
   function createButton(iconPath, onClick) {
     const button = document.createElement('button');
     button.style.cssText = `
-      background-color: rgba(255, 255, 255, 0.9);
-      color: black;
+      background: transparent;
+      color: white;
       border: none;
       border-radius: 50%;
-      width: 80px;
-      height: 80px;
-      font-size: 16px;
-      font-weight: bold;
+      width: 150px;
+      height: 150px;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
       transition: transform 0.2s;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       pointer-events: auto;
     `;
     
