@@ -30,7 +30,7 @@ function init() {
     justify-content: center;
     align-items: center;
     gap: 100px;
-    pointer-events: auto;
+    pointer-events: none;
   `;
 
   function createButton(iconPath, onClick) {
@@ -138,12 +138,10 @@ function init() {
     
     videoContainer.addEventListener('mouseenter', () => {
       overlay.style.opacity = '1';
-      overlay.style.pointerEvents = 'auto';
     });
     
     videoContainer.addEventListener('mouseleave', () => {
       overlay.style.opacity = '0';
-      overlay.style.pointerEvents = 'none';
     });
   }
 }
