@@ -21,6 +21,17 @@
       "js": ["content.js"]
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/material-symbols--play-arrow.svg",
+        "icons/material-symbols--pause-rounded.svg",
+        "icons/material-symbols--forward-10.svg",
+        "icons/material-symbols--replay-10.svg"
+      ],
+      "matches": ["*://*.youtube.com/*"]
+    }
+  ],
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",

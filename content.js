@@ -33,9 +33,8 @@ function init() {
     pointer-events: auto;
   `;
 
-  function createButton(text, onClick) {
+  function createButton(iconPath, onClick) {
     const button = document.createElement('button');
-    button.textContent = text;
     button.style.cssText = `
       background-color: rgba(255, 255, 255, 0.9);
       color: black;
@@ -54,6 +53,17 @@ function init() {
       pointer-events: auto;
     `;
     
+    // Add SVG icon
+    fetch(chrome.runtime.getURL(iconPath))
+      .then(response => response.text())
+      .then(svgText => {
+        button.innerHTML = svgText;
+        const svgElement = button.querySelector('svg');
+        svgElement.style.width = '40px';
+        svgElement.style.height = '40px';
+        svgElement.style.fill = '#000';
+      });
+    
     button.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -71,33 +81,46 @@ function init() {
     return button;
   }
 
-  const rewindButton = createButton('←10s', () => {
+  const rewindButton = createButton('icons/material-symbols--replay-10.svg', () => {
     console.log('Rewind 10s clicked');
     videoElement.currentTime = Math.max(0, videoElement.currentTime - 10);
   });
 
-  const playPauseButton = createButton('▶/❚❚', () => {
+  let playIcon = 'icons/material-symbols--play-arrow.svg';
+  let pauseIcon = 'icons/material-symbols--pause-rounded.svg';
+  
+  const playPauseButton = createButton(videoElement.paused ? playIcon : pauseIcon, () => {
     console.log('Play/Pause clicked');
     if (videoElement.paused) {
       videoElement.play();
-      playPauseButton.textContent = '❚❚';
+      updatePlayPauseButtonIcon(false);
     } else {
       videoElement.pause();
-      playPauseButton.textContent = '▶';
+      updatePlayPauseButtonIcon(true);
     }
   });
 
+  function updatePlayPauseButtonIcon(isPaused) {
+    fetch(chrome.runtime.getURL(isPaused ? playIcon : pauseIcon))
+      .then(response => response.text())
+      .then(svgText => {
+        playPauseButton.innerHTML = svgText;
+        const svgElement = playPauseButton.querySelector('svg');
+        svgElement.style.width = '40px';
+        svgElement.style.height = '40px';
+        svgElement.style.fill = '#000';
+      });
+  }
+
   videoElement.addEventListener('play', () => {
-    playPauseButton.textContent = '❚❚';
+    updatePlayPauseButtonIcon(false);
   });
   
   videoElement.addEventListener('pause', () => {
-    playPauseButton.textContent = '▶';
+    updatePlayPauseButtonIcon(true);
   });
-  
-  playPauseButton.textContent = videoElement.paused ? '▶' : '❚❚';
 
-  const forwardButton = createButton('10s→', () => {
+  const forwardButton = createButton('icons/material-symbols--forward-10.svg', () => {
     console.log('Forward 10s clicked');
     videoElement.currentTime += 10;
   });
