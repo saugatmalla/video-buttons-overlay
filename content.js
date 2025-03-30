@@ -1,4 +1,12 @@
+// Track initialization state to avoid duplicate listeners
+let isInitialized = false;
+let eventListeners = [];
+
 function init() {
+  if (isInitialized) {
+    cleanup();
+  }
+  
   const videoElement = document.querySelector('video');
   if (!videoElement) {
     setTimeout(init, 1000);
@@ -50,16 +58,25 @@ function init() {
       pointer-events: auto;
     `;
     
-    // Add SVG icon
     fetch(chrome.runtime.getURL(iconPath))
       .then(response => response.text())
       .then(svgText => {
-        button.innerHTML = svgText;
-        const svgElement = button.querySelector('svg');
-        svgElement.style.width = '40px';
-        svgElement.style.height = '40px';
-        svgElement.style.fill = '#000';
-      });
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svgElement = doc.querySelector('svg');
+        
+        if (svgElement) {
+          svgElement.style.width = '40px';
+          svgElement.style.height = '40px';
+          svgElement.style.fill = '#000';
+          
+          button.textContent = ''; 
+          button.appendChild(svgElement);
+        } else {
+          console.error('Invalid SVG content from:', iconPath);
+        }
+      })
+      .catch(err => console.error('Error loading SVG:', err));
     
     button.addEventListener('click', (e) => {
       e.preventDefault();
@@ -101,12 +118,25 @@ function init() {
     fetch(chrome.runtime.getURL(isPaused ? playIcon : pauseIcon))
       .then(response => response.text())
       .then(svgText => {
-        playPauseButton.innerHTML = svgText;
-        const svgElement = playPauseButton.querySelector('svg');
-        svgElement.style.width = '40px';
-        svgElement.style.height = '40px';
-        svgElement.style.fill = '#000';
-      });
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svgElement = doc.querySelector('svg');
+        
+        if (svgElement) {
+          while (playPauseButton.firstChild) {
+            playPauseButton.removeChild(playPauseButton.firstChild);
+          }
+          
+          svgElement.style.width = '40px';
+          svgElement.style.height = '40px';
+          svgElement.style.fill = '#000';
+          
+          playPauseButton.appendChild(svgElement);
+        } else {
+          console.error('Invalid SVG content');
+        }
+      })
+      .catch(err => console.error('Error updating play/pause icon:', err));
   }
 
   videoElement.addEventListener('play', () => {
@@ -136,15 +166,77 @@ function init() {
     
     videoContainer.appendChild(overlay);
     
-    videoContainer.addEventListener('mouseenter', () => {
+    const mouseEnterHandler = () => {
       overlay.style.opacity = '1';
+    };
+    
+    const mouseLeaveHandler = () => {
+      overlay.style.opacity = '0';
+    };
+    
+    videoContainer.addEventListener('mouseenter', mouseEnterHandler);
+    videoContainer.addEventListener('mouseleave', mouseLeaveHandler);
+    
+    eventListeners.push({
+      element: videoContainer,
+      type: 'mouseenter',
+      handler: mouseEnterHandler
     });
     
-    videoContainer.addEventListener('mouseleave', () => {
-      overlay.style.opacity = '0';
+    eventListeners.push({
+      element: videoContainer,
+      type: 'mouseleave',
+      handler: mouseLeaveHandler
     });
   }
+  
+  const playHandler = () => {
+    updatePlayPauseButtonIcon(false);
+  };
+  
+  const pauseHandler = () => {
+    updatePlayPauseButtonIcon(true);
+  };
+  
+  videoElement.addEventListener('play', playHandler);
+  videoElement.addEventListener('pause', pauseHandler);
+  
+  eventListeners.push({
+    element: videoElement,
+    type: 'play',
+    handler: playHandler
+  });
+  
+  eventListeners.push({
+    element: videoElement,
+    type: 'pause',
+    handler: pauseHandler
+  });
+  
+  isInitialized = true;
 }
+
+function cleanup() {
+  eventListeners.forEach(({ element, type, handler }) => {
+    if (element) {
+      element.removeEventListener(type, handler);
+    }
+  });
+  eventListeners = [];
+  
+  const existingOverlay = document.querySelector('#youtube-control-overlay');
+  if (existingOverlay) {
+    existingOverlay.remove();
+  }
+  
+  isInitialized = false;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && document.location.href.includes('youtube.com/watch')) {
+    init();
+  }
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "checkOverlay") {
@@ -158,5 +250,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-window.addEventListener('load', init);
-setTimeout(init, 1500);
+let lastUrl = location.href;
+new MutationObserver(() => {
+  const url = location.href;
+  if (url !== lastUrl) {
+    lastUrl = url;
+    if (url.includes('youtube.com/watch')) {
+      setTimeout(init, 1000);
+    } else {
+      cleanup();
+    }
+  }
+}).observe(document, {subtree: true, childList: true});
+
+if (document.readyState === 'loading') {
+  window.addEventListener('load', init);
+} else {
+  setTimeout(init, 1500);
+}

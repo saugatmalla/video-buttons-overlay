@@ -1,7 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    const currentUrl = tabs[0].url;
-    const isYoutubeUrl = currentUrl.includes('youtube.com/watch');
+    let isYoutubeUrl = false;
+    
+    try {
+      const url = new URL(tabs[0].url);
+      isYoutubeUrl = (url.hostname === 'www.youtube.com' || url.hostname === 'youtube.com') && 
+                    url.pathname.startsWith('/watch');
+    } catch (e) {
+      console.error('Invalid URL:', e);
+      isYoutubeUrl = false;
+    }
     
     if (!isYoutubeUrl) {
       const infoDiv = document.createElement('div');
@@ -13,10 +21,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     else {
       chrome.tabs.sendMessage(tabs[0].id, {action: "checkOverlay"}, function(response) {
-        if (chrome.runtime.lastError || !response || !response.exists) {
+        if (chrome.runtime.lastError) {
+          console.error('Error checking overlay:', chrome.runtime.lastError.message);
           chrome.scripting.executeScript({
             target: {tabId: tabs[0].id},
             files: ['content.js']
+          }).catch(err => console.error('Failed to inject content script:', err));
+          return;
+        }
+        
+        if (!response || !response.exists) {
+          chrome.scripting.executeScript({
+            target: {tabId: tabs[0].id},
+            files: ['content.js']
+          }).then(() => {
+            console.log('Content script injected successfully');
+          }).catch(err => {
+            console.error('Failed to inject content script:', err);
           });
         }
       });
