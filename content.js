@@ -54,7 +54,7 @@ function init() {
       display: flex;
       justify-content: center;
       align-items: center;
-      transition: transform 0.2s;
+      transition: transform 0.2s, background-color 0.3s;
       pointer-events: auto;
     `;
     
@@ -81,7 +81,45 @@ function init() {
     button.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      
+      button.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+      button.style.transform = 'scale(0.9)';
+      
+      const ripple = document.createElement('div');
+      ripple.style.cssText = `
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-effect 0.6s linear;
+        pointer-events: none;
+      `;
+      
+      if (!document.querySelector('#ripple-keyframes')) {
+        const style = document.createElement('style');
+        style.id = 'ripple-keyframes';
+        style.textContent = `
+          @keyframes ripple-effect {
+            0% { transform: scale(0); opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      button.appendChild(ripple);
+      
       onClick();
+      
+      setTimeout(() => {
+        button.style.backgroundColor = 'transparent';
+        button.style.transform = 'scale(1)';
+        if (ripple && ripple.parentNode === button) {
+          button.removeChild(ripple);
+        }
+      }, 600);
     });
     
     button.addEventListener('mouseover', () => {
