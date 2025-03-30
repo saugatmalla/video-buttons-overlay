@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>YouTube Video Controls</title>
+    <style>
+        body {
+            width: 300px;
+            padding: 15px;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .info {
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        .controls-preview {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .control-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f1f1f1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>YouTube Video Controls</h1>
+    <div class="info">
+        Hover over any YouTube video to show large control buttons:
+    </div>
+    <div class="controls-preview">
+        <div class="control-button">←10s</div>
+        <div class="control-button">▶/❚❚</div>
+        <div class="control-button">10s→</div>
+    </div>
+    <div class="info">
+        <strong>Instructions:</strong>
+        <ul>
+            <li>Play/Pause: Click the middle button</li>
+            <li>Skip backward 10s: Click the left button</li>
+            <li>Skip forward 10s: Click the right button</li>
+        </ul>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>
